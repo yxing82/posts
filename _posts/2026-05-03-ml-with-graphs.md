@@ -1,5 +1,5 @@
 ---
-title: "Notes on ML with Graphs"
+title: "Notes on ML with Graphs (Updating)"
 date: 2026-05-03
 categories: [Notes, Machine Learning]
 tags: [graphs, ml]
