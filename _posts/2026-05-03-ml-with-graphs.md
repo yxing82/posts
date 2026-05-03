@@ -33,4 +33,15 @@ Researches are focused on 2 features:
 
 For importance-based features, the main question is "_How to identify the importance of a certain node?_"
 
+Two types of features will be discussed in this section: **Node Degree** and **Node Centrality**.
+
+#### Node Degree
+
+#### Node Centrality
+
+### Structure-based features
+
+Structure-based featurs are explored to capture topological properties of local neighbouring nodes in the network.
+
+Three key concepts will be introduced in this section: **Node Degree** and **Clustering Coefficient**, and **Graphlet Degree Vector**.
 
