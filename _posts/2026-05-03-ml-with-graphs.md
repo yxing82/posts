@@ -414,9 +414,9 @@ $$
 \text{ENC}(v) = \mathbf{Z} \cdot \mathbf{v}
 $$
 
-*   $\mathbf{Z} \in \mathbb{R}^{d \times |V|}$: Embedding matrix. Each column is a pspecific node's embedding vector. $d$ is the dimension of embeddings.
+*   $\mathbf{Z} \in \mathbb{R}^{d \times \vert V \vert}$: Embedding matrix. Each column is a pspecific node's embedding vector. $d$ is the dimension of embeddings.
 
-*   $\mathbf{v} \in \mathbb{I}^{|V|}$: One-hot indicator for node $v$
+*   $\mathbf{v} \in \mathbb{I}^{\vert V \vert}$: One-hot indicator for node $v$
 
 > In some cases, each row in the embedding matrix can be represented as an embedding vector. 
 
@@ -434,7 +434,7 @@ $$
 
 - **Expressivity:** walks naturally capture multi-hop, higher-order relationships; not just direct edges.
 
-- **Efficiency:** only train pairs that actually co-occur in the walks, not all $O(|V|^{2})$ pairs.
+- **Efficiency:** only train pairs that actually co-occur in the walks, not all $O(\vert V \vert^{2})$ pairs.
 
 - **Flexibility:** changing the walk strategy (§3.4) changes what "similar" means.
 
@@ -573,14 +573,14 @@ $$
 - $P(v \mid \mathbf{z}_{u})$ is a monotonic function, where higher $\mathbf{z}_{u}^\top \mathbf{z}_{n}$ implies higher $P(v \mid \mathbf{z}_{u})$.
 
 
-**Problem:** the denominator requires summing over every node pair in the graph. For each training pair $(u, v)$, this is $O(|V|)$, and across all pairs it becomes $O(|V|)^{2}$. Intractable for large graphs.
+**Problem:** the denominator requires summing over every node pair in the graph. For each training pair $(u, v)$, this is $O(\vert V \vert)$, and across all pairs it becomes $O(\vert V \vert)^{2}$. Intractable for large graphs.
 
 **Solution:** Negative Sampling.
 
 
 ### Negative Sampling 
 
-Instead of asking "is node $v$ the most similar node to $u$, out of all $|V|$ nodes?" (Softmax), we ask "can we distinguish the real neighbour $v$ from $K$ random imposters?" (**Binary Cross-Entropy Approximation**).
+Instead of asking "is node $v$ the most similar node to $u$, out of all $\vert V \vert$ nodes?" (Softmax), we ask "can we distinguish the real neighbour $v$ from $K$ random imposters?" (**Binary Cross-Entropy Approximation**).
 
 We approximate the softmax loss with:
 
@@ -599,14 +599,14 @@ Together, the model learns to discriminate real walk neighbours from random nois
 |---|---|
 | $K$ (number of negatives per positive) | 5–20 for small datatset; 2-5 for large dataset. <br> Picked completely random, ignoring edges. |
 | Sampling distribution $P_V$ | Proportional to node degree |
-| Complexity per training pair | $O(K)$ instead of $O(\|V\|)$ |
+| Complexity per training pair | $O(K)$ instead of $O(\vert V \vert)$ |
 
 
 ### Training Pipeline
 
 Here is the concrete procedure for learning the embedding matrix $\mathbf{Z}$:
 
-1. **Initialise** the embedding lookup table $\mathbf{Z} \in \mathbb{R}^{d \times |V|}$ with small random values. Each column is a node's initial embedding.
+1. **Initialise** the embedding lookup table $\mathbf{Z} \in \mathbb{R}^{d \times \vert V \vert}$ with small random values. Each column is a node's initial embedding.
 
 2. **Sample walks** form all nodes using the chosen walk strategy $R$, and collect co-occurring pairs $(u, v)$.
 
@@ -683,10 +683,10 @@ $$
 
 | | Full Softmax | Negative Sampling |
 |---|---|---|
-| Formulation | **Multi-class** classification over $\|V\|$ nodes | **Binary** classification (true pair vs. fake pair) |
-| Normalisation scope | All $\|V\|$ nodes | $K$ sampled negatives |
-| Loss type | Cross-entropy over $\|V\|$ classes | Binary cross-entropy approximation |
-| Cost per pair | $O(\|V\|)$ | $O(K)$ |
+| Formulation | **Multi-class** classification over $\vert V \vert$ nodes | **Binary** classification (true pair vs. fake pair) |
+| Normalisation scope | All $\vert V \vert$ nodes | $K$ sampled negatives |
+| Loss type | Cross-entropy over $\vert V \vert$ classes | Binary cross-entropy approximation |
+| Cost per pair | $O(\vert V \vert)$ | $O(K)$ |
 | Accuracy | Exact MLE | Approximation (NCE) |
 | Scalability | Intractable for large graphs | Practical at scale |
 
