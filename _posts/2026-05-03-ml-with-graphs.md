@@ -414,9 +414,9 @@ $$
 \text{ENC}(v) = \mathbf{Z} \cdot \mathbf{v}
 $$
 
-- $\mathbf{Z} \in \mathbb{R}^{d \times |V|}$: Embedding matrix. Each column is a pspecific node's embedding vector. $d$ is the dimension of embeddings.
+*   $\mathbf{Z} \in \mathbb{R}^{d \times |V|}$: Embedding matrix. Each column is a pspecific node's embedding vector. $d$ is the dimension of embeddings.
 
-- $\mathbf{v} \in \mathbb{I}^{|V|}$: One-hot indicator for node $v$
+*   $\mathbf{v} \in \mathbb{I}^{|V|}$: One-hot indicator for node $v$
 
 > In some cases, each row in the embedding matrix can be represented as an embedding vector. 
 
