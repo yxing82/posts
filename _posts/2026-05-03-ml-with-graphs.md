@@ -2,7 +2,7 @@
 title: "Learning Notes on Machine Learning with Graphs (Updating)"
 date: 2026-05-03
 categories: [Notes, Machine Learning]
-tags: [graphs, ml]
+tags: [graphs, ml, random walk]
 math: true
 ---
 
@@ -611,14 +611,14 @@ Here is the concrete procedure for learning the embedding matrix $\mathbf{Z}$:
 2. **Sample walks** form all nodes using the chosen walk strategy $R$, and collect co-occurring pairs $(u, v)$.
 
 3. **For each positive pair** $(u,v)$:
-    - Look up $$\mathbf{z}_{u}$ and $\mathbf{z}_{v}$$ from the embedding matrix;
+    - Look up $$\mathbf{z}_{u}$$ and $$\mathbf{z}_{v}$$ from the embedding matrix;
     - Sample $K$ neagtive nodes $n_1, ..., n_K$ proportional to node degree, so the probability of picking node $n$ as a negative is:
     $$
     P(n) = \frac{\text{deg}(n)}{\sum_{m \in V} \text{deg}(m)}
     $$
     - Compute the negative-sampling loss for this pair
 
-4. **Backpropagate** through the loss to compute gradients $$\frac{\partial\mathcal{L}}{\partial\mathbf{z}_u}$, $\frac{\partial\mathcal{L}}{\partial\mathbf{z}_v}$, $\frac{\partial\mathcal{L}}{\partial\mathbf{z}_{n_i}}$$.
+4. **Backpropagate** through the loss to compute gradients $$\frac{\partial\mathcal{L}}{\partial\mathbf{z}_u}$$, $$\frac{\partial\mathcal{L}}{\partial\mathbf{z}_v}$$, $$\frac{\partial\mathcal{L}}{\partial\mathbf{z}_{n_i}}$$.
 
 5. **Update** the corresponding columns of $\mathbf{Z}$ via stochastic gradient descent (SGD), where $\eta$ is the learning rate (i.e. Overwrite random numbers in the embeddings with better numbers to make entries as probabilities we expected):
 
