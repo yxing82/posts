@@ -10,10 +10,8 @@ math: true
 
 > **Instructor:** Prof. Jure Leskovec
 
-> **Lectures Covered:** 1.1 – 2.3 (Traditional Feature-based Methods)
+> **Lectures Covered:** 1.1 – 3.2 
 
-<br>
-<br>
 <br>
 
 # 1. Introduction to Graph ML
@@ -352,3 +350,366 @@ After colour refinement, represent each graph as a count vector of how many node
 
 The rest of the course (Lectures 3+) addresses this by introducing methods that *learn* features automatically, starting with node embeddings and moving to graph neural networks.
 
+<br>
+<br>
+<br>
+
+# 3. Node Embeddings: Foundations
+
+<br>
+
+## 3.1 Problem Definition
+
+Given an undirected graph $G = (V, E)$ with adjacency matrix $A$ (binary, no node features), learn a mapping function $f: u \rightarrow \mathbb{R}^{d}$ that assigns each node a low-dimentional vector $\mathbf{z}_{u}$ such that:
+
+$$
+\text{similarity}(u, v) \approx \mathbf{z}_{u}^\top \mathbf{z}_{v}
+$$
+
+Nodes that are **"similar" in the graph** should be **close in embedding space**.
+
+**Key Questions:**
+
+- How to **define similarity**?
+
+- How to learn the **mapping $f$**?
+
+**Properties:**
+
+- **Unsupervised / Semi-supervised:** 
+
+    No node labels or features are utilised.
+
+    The goal is to directly estimate a set of coordinates (embedding $\mathbf{z}_{u}$) for each node to capture network structure by the decoder (DEC).
+
+    The graph topology itself is the only supervision signal.
+
+- **Task-independent:** 
+
+    Embeddings are trained to preserve general structural properties.
+
+    Not optimised for s specific prediction target.
+
+    The same embeddings can be reused across different downstream tasks without retraining (e.g. node classification, link prediction).
+
+<br>
+
+## 3.2 The Encoder-Decoder Framework
+
+Every node embedding method is an instance of this framework:
+
+| Component | What it does | Typical choice |
+|---|---|---|
+| **Encoder** | $\text{ENC}(v) = \mathbf{z}_v$ <br> maps node → vector (embedding) | Shallow lookup or GNN |
+| **Decoder** | $\text{DEC}(\mathbf{z}_u, \mathbf{z}_v)$ <br> maps vector pair (embeddings) → similarity score | Dot product $\mathbf{z}_u^\top\mathbf{z}_v$ |
+| **Similarity function** | Ground-truth notion of "similar" in the graph | Adjacency, co-occurrence, random walk probability |
+| **Objective** | Force decoder output to match the similarity function | Maximise likelihood; <br> minimise loss |
+
+
+### Shallow Encoding
+
+DeepWalk and Node2vec both use a **direct lookup table** as the simplest possible encoder:
+
+$$
+\text{ENC}(v) = \mathbf{Z} \cdot \mathbf{v}
+$$
+
+- $\mathbf{Z} \in \mathbb{R}^{d \times |V|}$: Embedding matrix. Each column is a pspecific node's embedding vector. $d$ is the dimension of embeddings.
+
+- $\mathbf{v} \in \mathbb{I}^{|V|}$: One-hot indicator for node $v$
+
+> In some cases, each row in the embedding matrix can be represented as an embedding vector. 
+
+The embedding matrix is what we learn. Every node is assigned a unique, independent embedding vector. Here, no parameter sharing, no generalisation to unseen nodes.
+
+<br>
+
+## 3.3 Defining Similarity via Random Walks
+
+For both DeepWalk and Node2vec, we define similarity as the probability that 2 nodes co-occur on short random walks. Specifically, 
+
+$$
+\mathbf{z}_{u}^\top \mathbf{z}_{v} \approx P(\text{u and v co-occur on a random walk})
+$$
+
+- **Expressivity:** walks naturally capture multi-hop, higher-order relationships; not just direct edges.
+
+- **Efficiency:** only train pairs that actually co-occur in the walks, not all $O(|V|^{2})$ pairs.
+
+- **Flexibility:** changing the walk strategy (§3.4) changes what "similar" means.
+
+<br>
+
+## 3.4 Walk Strategy 
+
+DeepWalk and Node2vec are differeciated by walk strategies.
+
+The **walk strategy $R$** determines the **neighbourhood $N_{R}(u)$**, the multiset of nodes visited on walks starting from node $u$.
+
+> "multiset" means we allow the same node appears more than once in the list.
+
+Two hyperparameters control the volume of walk data generated for all walk-based methods:
+
+- **Number of Walks $r$:** dictates number of independent random walks starting from node $u$. It controls the sampling density of the local neighbourhood.
+    - if $r = 10$, the algorithm will go back to the starting node $u$ 10 separate times to begin a fresh walk.
+
+- **Length of Walks $l$:** number of hops (edges traversed) the walker takes before the sequence terminates.
+    - if $l = 5$, the walker steps to an adjacent node for 5 times.
+
+Together, $r \times l$ determines the size of $N_R(u)$ for each node.
+
+### Uniform Random Walks (DeepWalk)
+
+- **1st-Order Markov walk:** The probability of moving to the next node depends *only* on the current node. It has no memory of how it got there.
+
+- **Limitation:** Blends local and global structure wihout any control over which one dominates
+
+
+### Biased Random Walks (Node2vec)
+
+- **2nd-Order Markov Walk:** The probability of moving to the next node depends on the current node **and** the immediately preceding node. It has a memory of exactly one previous step.
+
+- Controlled by two paramaters: **Return parameter** $p$ and **In-out parameter** $q$.
+
+**Setup:**
+
+The walk just moved from $v \rightarrow u$ and is choosing the next node $x$ among $u$'s neighbours.
+
+The unnoramlised transition weight depends on the shortest-path distance $d_{vx}$ between the previous node $v$ and the candidate node $x$:
+
+| $d_{vx}$ | Situation | Weight | Effect |
+|---|---|---|---|
+| 0 | $x = v$ <br> (backtrack to previous) | $1/p$ | **Return parameter $p$** <br> controls backtracking |
+| 1 | $x$ is a neighbour of both $u$ and $v$ | $1$ | Baseline <br> stay in local cluster |
+| 2 | $x$ is further from $u$ | $1/q$ | **In-out parameter $q$** <br> controls outward exploration |
+
+**Reading $p$ and $q$:** Which nodes end up in the same walk together?
+
+| Setting | Walk behaviour | Exploration type | Captures |
+|---|---|---|---|
+| Low $p$ | Frequently backtracks | Stays very local | Local structural patterns |
+| High $p$ | Avoids revisiting | Pushes outward | Broader exploration |
+| Low $q$ <br> (< 1) | Moves away from previous node | **Depth-First Search** <br> ventures far | **Homophily** <br> (outward exploration) |
+| High $q$ <br> (> 1) | Stays close to previous node | **Breadth-First Search** <br> stays local | **Structural Equivalence** <br> (local exploration) |
+
+- DFS-like deep walk (low $q$) plunges deep into the graph. 
+
+- BFS-like deep walk (high $q$ or low $p$) circles the local neighbourhood.
+
+ - DeepWalk is the special case, where $p = q = 1$ as uniform walk.
+
+ -  Essentially, $q$ is the "ratio" of BFS vs. DFS 
+
+
+### BFS vs. DFS: Two Views of the Graph 
+
+Given BFS and DFS, the same graph has two fundamentally different notions of node similarity, selected by the walk strategy:
+
+| | BFS neighbourhood (inward) | DFS neighbourhood (outward) |
+|---|---|---|
+| **What it samples** | Immediate neighbours of $u$ | Nodes at increasing distance from $u$ |
+| **View** | Local Microscopic | Global Macroscopic |
+| **Similarity notion** | **Structural equivalence** <br> two hub nodes in **distant** parts of the graph | **Homophily** <br> nodes in the same community or **cluster** |
+| **Why it works** | Characterising structural role only requires accurate local topology | Detecting community membership requires seeing the broader network |
+
+In Node2vec, $p$ and $q$ **continuously interpolate** between two extremes within a single algorithm.
+
+<br>
+
+## 3.5 Optimisation
+
+All random-walk embedding methods share the **same optimisation pipeline**. The **differences** between random-walk embedding methods live *entirely* in "How walks are generated" (§3.4).
+
+The walk prediction task is purely a **pretext task** to force the embbedding vectors into a configuration that captures network structure. Once training is done, we throw away the objective and keep **only** the **learned embedding matrix $Z$** for down stream tasks. i.e. Optimising random walk prediction is *NOT* to build an accurate walk predictor. We dont care about the accuracy of the walk predictions themselves.
+
+### Maximum Likelihood Formulation
+
+Treat the random walk neighbourhoods $N_{R}(u)$ as **observed data**, and the embeddings $f$ mapping to $\mathbf{z}_{u}$ as **parameters**.
+
+The goal is to find embeddings that maximise the likelihood of the observed co-occurances:
+
+$$
+\max_{\mathbf{f}} \sum_{u \in V} \log P\bigl(N_R(u) \mid \mathbf{z}_u\bigr)
+$$
+
+> In the shallow encoding setup, $f$ is just the lookup table, so the actual learnable parameters are the embedding vectors $\mathbf{z}_{u}$ themselves (i.e. the columns of the embedding matrix $Z$). <br> In this case, $f$ is equivalent to specifying $Z$.
+
+We assume that predicting each neighbour $v \in N_{R}(u)$ is conditionally independent given $\mathbf{z}_{u}$. This lets us decompose the joint probability into a product over individual neighbours:
+
+$$
+P(N_{R}(u) \mid \mathbf{z}_{u}) = \prod_{v \in N_{R}(u)} P(v \mid \mathbf{z}_{u})
+$$
+
+Taking the log converts the product into a sum:
+
+$$
+\log(\prod_{v \in N_{R}(u)} P(v \mid \mathbf{z}_{u})) = \sum_{v \in N_{R}(u)} \log(P(v \mid \mathbf{z}_{u}))
+$$
+
+Converting from **maximising the positive** log-likelihood to **minimising the negative** one gives us the **Loss**:
+
+$$
+\mathcal{L} = \sum_{u \in V} \sum_{v \in N_{R}(u)} -\log(P(v \mid \mathbf{z}_{u}))
+$$
+
+### Softmax Parameterisation
+
+To turn dot products into probabilities, for each individual $P(v \mid \mathbf{z}_{u})$, we use a **softmax** over all nodes:
+
+$$
+P(v \mid \mathbf{z}_{u}) = \frac{\exp (\mathbf{z}_{u}^\top \mathbf{z}_{u})}{\sum_{n \in V} \exp (\mathbf{z}_{u}^\top \mathbf{z}_{n})}
+$$
+
+, where:
+
+- $\mathbf{z}_{u}^\top \mathbf{z}_{u}$ is the raw similarity score between node $u$ and $v$.
+
+- $\exp (\mathbf{z}_{u}^\top \mathbf{z}_{u})$ makes the similarity score *strictly positive* to generate the probability output.
+
+- $\sum_{n \in V} \exp (\mathbf{z}_{u}^\top \mathbf{z}_{n})$ calculate similarity scores between node $u$ and every other node in the graph. This ensures the output is a clean percentage in $(0, 1)$.
+
+- $P(v \mid \mathbf{z}_{u})$ sums to 1 and all entries are positive, making it a valid probability distribution.
+
+- $P(v \mid \mathbf{z}_{u})$ is a monotonic function, where higher $\mathbf{z}_{u}^\top \mathbf{z}_{n}$ implies higher $P(v \mid \mathbf{z}_{u})$.
+
+
+**Problem:** the denominator requires summing over every node pair in the graph. For each training pair $(u, v)$, this is $O(|V|)$, and across all pairs it becomes $O(|V|)^{2}$. Intractable for large graphs.
+
+**Solution:** Negative Sampling.
+
+
+### Negative Sampling 
+
+Instead of asking "is node $v$ the most similar node to $u$, out of all $|V|$ nodes?" (Softmax), we ask "can we distinguish the real neighbour $v$ from $K$ random imposters?" (**Binary Cross-Entropy Approximation**).
+
+We approximate the softmax loss with:
+
+$$
+-\log (P(v \mid \mathbf{z}_{u})) \approx \underbrace{-\log(\sigma(\mathbf{z}_u^\top\mathbf{z}_v))}_{\text{push positive pair together}} - \sum_{i=1}^{K}\underbrace{\log(\sigma(-\mathbf{z}_u^\top\mathbf{z}_{n_i}))}_{\text{push negative pairs apart}}, \quad n_i \sim P_V
+$$
+
+, where $\sigma$ is the sigmoid function, converting similarity scores into probabilities.
+
+In terms of "Binary":
+- the 1st term **rewards** the model for scoring real co-occurrences highly (positive sample)
+- the 2nd term **penalises** it for scoring random pairs highly (negative sample)
+Together, the model learns to discriminate real walk neighbours from random noise 
+
+| Detail | Value / rule |
+|---|---|
+| $K$ (number of negatives per positive) | 5–20 for small datatset; 2-5 for large dataset. <br> Picked completely random, ignoring edges. |
+| Sampling distribution $P_V$ | Proportional to node degree |
+| Complexity per training pair | $O(K)$ instead of $O(\|V\|)$ |
+
+
+### Training Pipeline
+
+Here is the concrete procedure for learning the embedding matrix $\mathbf{Z}$:
+
+1. **Initialise** the embedding lookup table $\mathbf{Z} \in \mathbb{R}^{d \times |V|}$ with small random values. Each column is a node's initial embedding.
+
+2. **Sample walks** form all nodes using the chosen walk strategy $R$, and collect co-occurring pairs $(u, v)$.
+
+3. **For each positive pair** $(u,v)$:
+    - Look up $\mathbf{z}_{u}$ and $\mathbf{z}_{v}$ from the embedding matrix;
+    - Sample $K$ neagtive nodes $n_1, ..., n_K$ proportional to node degree, so the probability of picking node $n$ as a negative is:
+    $$
+    P(n) = \frac{\text{deg}(n)}{\sum_{m \in V} \text{deg}(m)}
+    $$
+    - Compute the negative-sampling loss for this pair
+
+4. **Backpropagate** through the loss to compute gradients $\frac{\partial\mathcal{L}}{\partial\mathbf{z}_u}$, $\frac{\partial\mathcal{L}}{\partial\mathbf{z}_v}$, $\frac{\partial\mathcal{L}}{\partial\mathbf{z}_{n_i}}$.
+
+5. **Update** the corresponding columns of $\mathbf{Z}$ via stochastic gradient descent (SGD), where $\eta$ is the learning rate (i.e. Overwrite random numbers in the embeddings with better numbers to make entries as probabilities we expected):
+
+$$
+\mathbf{z}_u \leftarrow \mathbf{z}_u - (\eta \frac{\partial\mathcal{L}}{\partial\mathbf{z}_u})
+$$
+
+
+6. **Iterate** over millions of node pairs. 
+    - Sample **true** node pairs $\rightarrow$ Calculate the dot product and squash it with the sigmoid function to get the probability $p$ $\rightarrow$ Get the error between the target and the function result $\rightarrow$ Update in the embedding matrix $\mathbf{Z}$ for both nodes
+        - Visual result: true nodes are **pulled together** in the embedding space 
+        - Their dot products increase for the next time 
+
+    - Sample **fake** node pairs $\rightarrow$ Calculate the dot product and squash it with the sigmoid function to get the probability $p$ $\rightarrow$ Get the error between the target and the function result $\rightarrow$ Update in the embedding matrix $\mathbf{Z}$ for both nodes
+        - Visual result: fake nodes are **pushes apart** in the embedding space 
+        - Their dot products decrease for the next time 
+
+7. **Convergence:** continue until the loss stops decreasing meaningfully. At this point, the embedding matrix $\mathbf{Z}$ has stabilised.
+
+8. **Stop the training loop and Keep $\mathbf{Z}$**. Discard the objective, the walks, and the negative sampler. The columns of $\mathbf{Z}$ are the final node embeddings, ready for any downstream tasks.
+
+<br>
+
+## 3.6 Full Algorithm Summary
+
+| Step | What happens | Shared or method-specific? |
+|---|---|---|
+| 1. **Preprocess** | Compute biased transition probabilities (Node2vec) or skip (DeepWalk) | Method-specific |
+| 2. **Walk** | Simulate $r$ walks of length $l$ per node using strategy $R$ | Method-specific (uniform vs. biased) |
+| 3. **Collect** | Build $N_R(u)$ for each node from walk co-occurrences | Shared |
+| 4. **Optimise** | SGD and Negative Sampling on the log-likelihood objective | Shared |
+| 5. **Use** | Plug $\mathbf{z}_u$ vectors into any downstream task | Shared |
+
+
+<br>
+
+## 3.7 Method Comparison
+
+### DeepWalk vs. Node2Vec
+
+| | DeepWalk | Node2Vec |
+|---|---|---|
+| Walk type | Uniform, 1st-order | Biased, 2nd-order |
+| Parameters | Walk length $l$, walks per node $r$ | $l$, $r$, **return $p$, in-out $q$** |
+| Neighbourhood control | None, <br> takes what the walk gives | Full, <br> interpolates BFS ↔ DFS |
+| Homophily | Captured implicitly | Explicitly tunable (low $q$) |
+| Structural equivalence | Weak | Explicitly tunable (high $q$) |
+| Relationship | Special case of node2vec <br> ($p=q=1$) | Generalisation of DeepWalk |
+
+
+### Homophily vs. Structural Equivalence
+
+| | Homophily | Structural Equivalence |
+|---|---|---|
+| Question asked | "Are $u$ and $v$ in the same cluster?" | "Do $u$ and $v$ play the same role?" |
+| Nodes are similar if | They are close / densely connected | They have similar local topology (even if far apart) |
+| Walk strategy | DFS-like (low $q$) <br> explores broadly | BFS-like (high $q$) <br> characterises local structure |
+| Example | Two members of the same friend group | Two "bridge" nodes in different parts of the network |
+
+
+### Full Softmax vs. Negative Sampling
+
+| | Full Softmax | Negative Sampling |
+|---|---|---|
+| Formulation | **Multi-class** classification over $\|V\|$ nodes | **Binary** classification (true pair vs. fake pair) |
+| Normalisation scope | All $\|V\|$ nodes | $K$ sampled negatives |
+| Loss type | Cross-entropy over $\|V\|$ classes | Binary cross-entropy approximation |
+| Cost per pair | $O(\|V\|)$ | $O(K)$ |
+| Accuracy | Exact MLE | Approximation (NCE) |
+| Scalability | Intractable for large graphs | Practical at scale |
+
+### Shallow Encoding vs. Deep Encoding (GNNs)
+
+| | Shallow (DeepWalk, node2vec) | Deep (GNNs) |
+|---|---|---|
+| Encoder | Lookup table with one vector per node | Neural network over neighbour features |
+| Parameter sharing | None | Shared weights across all nodes |
+| Handles unseen nodes? | No (transductive only) | Yes (inductive) |
+| Uses node features? | No | Yes |
+
+<br>
+
+## 3.8 Key Equations 
+
+| Concept | Equation |
+|---|---|
+| Embedding goal | $\text{similarity}(u,v) \approx \mathbf{z}_u^\top\mathbf{z}_v$ |
+| Shallow encoder | $\text{ENC}(v) = \mathbf{Z} \cdot \mathbf{v}$ |
+| MLE objective | $\max_{\mathbf{f}} \sum_{u} \log P(N_R(u) \mid \mathbf{z}_u)$ |
+| Independence assumption | $P(N_R(u) \mid \mathbf{z}_u) = \prod_{v \in N_R(u)} P(v \mid \mathbf{z}_u)$ |
+| Loss (negative log-likelihood) | $\mathcal{L} = \sum_{u}\sum_{v \in N_R(u)} -\log (P(v \mid \mathbf{z}_u))$ |
+| Softmax (multi-class) | $P(v \mid \mathbf{z}_u) = \frac{\exp(\mathbf{z}_u^\top\mathbf{z}_v)}{\sum_n\exp(\mathbf{z}_u^\top\mathbf{z}_n)}$ |
+| Negative sampling (binary) | $\approx -\log(\sigma(\mathbf{z}_u^\top\mathbf{z}_v)) - \sum_{i=1}^k\log(\sigma(-\mathbf{z}_u^\top\mathbf{z}_{n_i}))$ |
+| Node2vec bias ($d_{ux}=0,1,2$) | Weights: $\frac{1}{p}$, $1$, $\frac{1}{q}$ |
