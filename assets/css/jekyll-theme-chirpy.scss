@@ -36,7 +36,7 @@
   border-left: .2rem solid #8b5cf6;
   border-radius: 0.25rem;
   background-color: rgba(139, 92, 246, 0.06);
-  padding: .6rem 1rem .6rem 1.5rem;
+  padding: .6rem 1rem .6rem 2.5rem;
   margin-bottom: 1rem;
 
   &::before {
@@ -44,13 +44,20 @@
     font: var(--fa-font-solid);
     color: #8b5cf6;
     position: absolute;
-    left: .2rem;
-    margin-top: .4rem;
+    left: .6rem;
+    top: .6rem;
     text-align: center;
-    width: 3rem;
+    width: 1.5rem;
   }
+}
 
-  > p:first-child {
-    padding-left: 2rem;
+/* Override tip style for additional notes (grey) */
+.prompt-tip {
+  border-left-color: #9ca3af !important;
+  background-color: rgba(156, 163, 175, 0.08) !important;
+
+  &::before {
+    color: #9ca3af !important;
+    content: "\f249" !important; /* pen-fancy icon */
   }
 }
