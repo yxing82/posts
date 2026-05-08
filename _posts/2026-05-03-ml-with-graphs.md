@@ -864,7 +864,8 @@ $$
 - $$w_t$$: specific target ealk currently looking at
 - $\Delta$: size of context/neighbourhood
 
-> **Example:** If $\Delta = 1$, we will look at the exact one walk before the target walk ($$w_{t-1}$$) and the exact one walk after ($$w_{t+1}$$).
+!!! example Example
+    If $\Delta = 1$, we will look at the exact one walk before the target walk ($$w_{t-1}$$) and the exact one walk after ($$w_{t+1}$$).
 
 , where the probability is computed via softmax:
 
@@ -872,11 +873,13 @@ $$
 P\left(w_t \;\middle|\; \{w_{t-\Delta}, \ldots, w_{t+\Delta}, \mathbf{z}_G\}\right) = \frac{\exp(y(w_t))}{\sum_{i=1}^{\eta} \exp(y(w_i))}
 $$
 
-> **Notion:** This is the probability of seeing target walk ($$w_{t}$$), given the surrounding walk contexts and the overall graph embedding.
+!!! note Note
+    This is the probability of seeing target walk ($$w_{t}$$), given the surrounding walk contexts and the overall graph embedding.
 
-> **Notion:** For the whole graph embedding learning process, 
->   - $\mathbf{z}_G$ is the global clue, meaning a completely separate, special vector of the entire graph. It's treated a shared context for all walks in the graph.
->   - $$w_{t-\Delta}$$ are local clues, representing local structures.
+!!! note Note 
+    For the whole graph embedding learning process, 
+    - $\mathbf{z}_G$ is the global clue, meaning a completely separate, special vector of the entire graph. It's treated a shared context for all walks in the graph.
+    - $$w_{t-\Delta}$$ are local clues, representing local structures.
 
 , and the score function $$y(w_t)$$ is:
 
