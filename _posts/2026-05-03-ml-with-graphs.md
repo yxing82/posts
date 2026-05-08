@@ -163,16 +163,15 @@ $$
 
 Ranges from 0 (no edges among neighbours) to 1 (neighbours form a complete clique).
 
-> **Problems with Bipartite Graphs:**
+> **Problems with Bipartite Graphs:** 
 >
 > * Triangles can NEVER form: if $u_{1} \in U$ connects to $v_{1} \in V$ and $v_{2} \in V$, the edge $(v_{1}, v_{2})$ cannot exist because both are in the same set $V$.
 >
-> The standard Clustering Coefficient is then always **zero** for every node in a bipartite graph.
->
-> **Bipartite Clustering Coefficient (4-Cycles / Squares):** counts 4-cycle ...
+> The standard Clustering Coefficient is then always **zero** for every node in a bipartite graph
+> 
+> **Bipartite Clustering Coefficient (4-Cycles / Squares):** counts 4-cycle (square) as a closed path $u_{1} \rightarrow v_{1} \rightarrow u_{2} \rightarrow v_{2} \rightarrow u_{1}$, where $u_{1}, u_{2} \in U$ and $v_{1}, v_{2} \in V$. 
 >
 > $$cc_v = \frac{\text{# closed 4-cycles through } v}{\text{# possible 4-cycles through } v}$$
->
 > | Graph type | Smallest cycle | Clustering measures |
 > |---|---|---|
 > | General (unipartite) | Triangle (3-cycle) | Standard clustering coefficient |

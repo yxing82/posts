@@ -19,3 +19,14 @@
   margin-top: 1.5rem;
   margin-bottom: 1rem;
 }
+
+
+.prompt-tip table,
+.prompt-tip table thead,
+.prompt-tip table tbody,
+.prompt-tip table tr,
+.prompt-tip table th,
+.prompt-tip table td {
+  background-color: transparent !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
