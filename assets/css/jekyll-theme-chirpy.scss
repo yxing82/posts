@@ -51,15 +51,14 @@
   }
 }
 
-/* Override tip style for additional notes (grey) */
-.prompt-tip {
-  border-left-color: #9ca3af !important;
-  background-color: rgba(156, 163, 175, 0.08) !important;
-}
-
+/* Override tip to grey note style */
 blockquote.prompt-tip::before {
   content: "\f303" !important;
+  font: var(--fa-font-solid) !important;
   color: #9ca3af !important;
-  font-family: 'Font Awesome 5 Free' !important;
-  font-weight: 900 !important;
+}
+
+blockquote.prompt-tip {
+  border-left-color: #9ca3af !important;
+  background-color: rgba(156, 163, 175, 0.08) !important;
 }
