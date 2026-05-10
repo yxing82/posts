@@ -1062,3 +1062,25 @@ Repeatedly multiplying by $M$ amplifies the component along the principal aigenv
 <br>
 
 ### 6.3 Two Problems with Power Iteration
+
+### Spider Traps
+
+A **spider trap** is a set of pages whose out-links all stay within the group. The random surfer gets trapped, amd all importance acculates *inside* the trap.
+
+> **Example:**
+> 
+> If page $b$ has a self-loop as its only out-link,
+>
+> $$
+> \text{power iteration converges to} r_b = 1 \text{and} r = 0 \text{for everything else.}
+> $$ 
+{: .prompt-example }
+
+> This is NOT mathematical failure, since the eigenvector still exists. But the resulting scores are meaningless.
+{: .prompt-tip }
+
+### Dead Ends
+
+<br>
+
+### 6.4 Random Teleportation (Solution) 
