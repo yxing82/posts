@@ -997,7 +997,7 @@ However, not all web pages are equally important. The key insight behind the Pag
 Formally, the **PageRank** $r_j$ of page $j$ is defined by the **flow equation**:
 
 $$
-r_j = \sum_{i \righarrow j} \frac{r_i}{d_i}
+r_j = \sum_{i \rightarrow j} \frac{r_i}{d_i}
 $$
 
 , where $d_i$ is the out-degree of node $i$ and the sum runs over all nodes $i$ that link to $j$.
@@ -1041,7 +1041,7 @@ As $t \rightarrow \infty$, the surfer reaches a stationary distribution $\mathbf
 > $\mathbf{p}$ is exactly the PageRank vector
 {: .prompt-tip }
 
-> A page's PageRank = the fraction of time the random surfer spends on it in the long run.
+> A page's PageRank = The fraction of time the random surfer spends on it in the long run.
 {: .prompt-tip }
 
 ### Formulation 3 - Power Iteration
