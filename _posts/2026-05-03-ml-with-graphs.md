@@ -1071,11 +1071,7 @@ The random surfer gets trapped, amd all importance acculates *inside* the trap.
 
 > **Example:**
 > 
-> If page $b$ has a self-loop as its only out-link,
->
-> $$
-> \text{power iteration converges to} r_b = 1 \text{and} r = 0 \text{for everything else.}
-> $$ 
+> If page $b$ has a self-loop as its only out-link, power iteration converges to $$ r_b = 1$$ and $$r = 0$$ for everything else.  
 {: .prompt-example }
 
 > This is NOT mathematical failure, since the eigenvector still exists. But the resulting scores are meaningless.
