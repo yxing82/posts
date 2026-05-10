@@ -1074,7 +1074,9 @@ The random surfer gets trapped, amd all importance acculates *inside* the trap.
 > If page $b$ has a self-loop as its only out-link, power iteration converges to $$ r_b = 1$$ and $$r = 0$$ for everything else.  
 {: .prompt-example }
 
-> This is NOT mathematical failure, since the eigenvector still exists. But the resulting scores are meaningless.
+> This is NOT mathematical failure, since the eigenvector still exists.
+> 
+> But the resulting scores are meaningless.
 {: .prompt-tip }
 
 ### Dead Ends
@@ -1095,3 +1097,51 @@ Over iterations, all PageRank drains to zero.
 <br>
 
 ### 6.4 Random Teleportation (Solution) 
+
+Both spider-traps and dead-ends can be solved by a mechanism **"Random Teleportation"**.
+
+At each time step, the surfer has two options:
+
+- With probability $\beta$, follow an out-link uniformly at random
+
+- With probability $(1 - \beta)$, **teleport** to any page in the graph uniformly at random
+
+Typically, $$\beta \in [0.8, 0.9]$$.
+
+> **Connection to Marchov Chains:**
+>
+> For power iteration to converge to a unique stationary distribution, the Markov chain must be irreducible and aperiodic.
+>
+> Teleporttion guarantees both properties.
+>
+> irreducible: any state reachable from any other
+> aperiodic: no fixed-period cycles
+{: .prompt-info }
+
+<br>
+
+### 6.5 The Google Matrix
+
+Incorporating teleportation, the PageRank equation becomes:
+
+$$
+r_j = \sum_{i \rightarrow j} \beta \cdot \frac{r_i}{d_i} + (1 - \beta) \cdot \frac{1}{N}
+$$
+
+In matrix form, define the Google Matrix $A$ as:
+
+$$
+A = \beta M + (1 - \beta) \cdot \frac{1}{N} \mathbf{e}\mathbf{e}^{T}
+$$
+
+, where $$\mathbf{e}$$ is the vector of all ones.
+
+The PageRank vector satisfies:
+
+$$
+\mathbf{r} = A \cdot \mathbf{r}
+$$
+
+, and is computed via Power Iteration as before.
+
+<br>
