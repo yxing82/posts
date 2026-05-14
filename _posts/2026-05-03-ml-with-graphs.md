@@ -253,9 +253,9 @@ In closed form: **S = (I − βA)⁻¹ − I**.
 
 To break down this complicated form, let $P^{(k)}_{uv} = \text{\# paths of length k between nodes u and v}$,
 
-*   Given adjacency matrix $A$, we can directly have $P^{(1)}_{uv} = A_{uv}$.
+*   Given adjacency matrix $A$, we can directly have $$P^{(1)}_{uv} = A_{uv}$$.
 
-*   For length 2, we multiply the adjacency matrix $A$ with itself, and derive $P^{(2)}_{uv} = A_{uv} * A_{uv} = A^{2}_{uv}$.
+*   For length 2, we multiply the adjacency matrix $A$ with itself, and derive $$P^{(2)}_{uv} = A_{uv} * A_{uv} = A^{2}_{uv}$$.
 
     $$(A^2)_{uv} = \sum_{w=1}^{|V|} A_{uw} A_{wv}$$
     
