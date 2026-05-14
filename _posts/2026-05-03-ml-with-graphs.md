@@ -1198,7 +1198,7 @@ As the teleport set $S$ shrinks from all nodes $\rightarrow$ a subset $\rightarr
 
 Random Walk based embeddings $\equiv$ Matrix Factorisation
 
-Given an [embedding matrix](#4-node-embeddings) $$Z \in \mathbb{R}^{d \times \vert V \vert}$$ where column \mathbf{z}_u is the embedding vector of node $u$, the decoder measures **similarity** via the inner product
+Given an [embedding matrix](#4-node-embeddings) $$Z \in \mathbb{R}^{d \times \vert V \vert}$$ where column $$\mathbf{z}_u$$ is the embedding vector of node $u$, the decoder measures **similarity** via the inner product
 
 $$
 \text{similarity}(u, v) \approx \mathbf{z}_{u}^\top \mathbf{z}_{v}
@@ -1219,7 +1219,7 @@ $$
 
 > The intuition is to have $$Z^{T} Z = A$$.
 >
-> But this is impossible, since the dimensioanlity of embeddings $d$ is way smaller than the number of nodes in most cases. 
+> But this is impossible, since the dimensioanlity of embeddings $d \ll$ the number of nodes $N$, in most cases. 
 {: .prompt-tip }
 
 Our optimisation objective becomes
@@ -1228,8 +1228,8 @@ $$
 \min_{Z} \| A - Z^{T} Z \|_2
 $$
 
-> The inner product decoder with node similarity, redefined by edge connectivity $\approx$ Matrix factorisation of adjacency matrix $A$
-{: .prompt-info }
+<!-- > The inner product decoder with node similarity which is redefined by edge connectivity $\approx$ Matrix factorisation of adjacency matrix $A$
+{: .prompt-info } -->
 
 > Connections among all three perspectives
 > - **PageRank** (Random Walks) determines node importance via stationary distribution of a Markov Chain
@@ -1248,5 +1248,5 @@ $$
 2. **Cannot capture local structual similarity**
     Two nodes that far apart on the graph will have different embeddings, even they share a similar structure.
 
-3. Cannot utilise node, edge, or graph features
+3. **Cannot utilise node, edge, or graph features**
     The methods only use the graph structure (adjacency matrix). They completely ignore any potential node features (e.g. user profile information), edge features (e.g. relationship types among nodes), or the graph itself (e.g. metadata).
