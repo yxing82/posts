@@ -2,7 +2,7 @@
 title: "Learning Notes on Machine Learning with Graphs (Updating)"
 date: 2026-05-03
 categories: [Notes, Machine Learning]
-tags: [graphs, ml, random walk, node embedding, graph embedding, pagerank]
+tags: [graphs, ml, random walk, node embedding, graph embedding, pagerank, node classification]
 math: true
 ---
 
@@ -10,7 +10,7 @@ math: true
 
 > **Instructor:** Prof. Jure Leskovec
 
-> **Lectures Covered:** 1.1 – 4.2 
+> **Lectures Covered:** 1.1 – 5.3
 
 <br>
 
@@ -278,7 +278,7 @@ The Katz index resolves the limitation of local methods by capturing indirect co
 
 <br>
 
-## 2.3. Graph-Level Features
+### 2.3. Graph-Level Features
 
 **Goal:** Create a feature vector that describes an *entire graph*, enabling graph-level classification.
 
@@ -1120,7 +1120,7 @@ Typically, $$\beta \in [0.8, 0.9]$$.
 
 <br>
 
-### 6.5 The Google Matrix
+### The Google Matrix
 
 Incorporating teleportation, the **PageRank equation** becomes:
 
@@ -1146,7 +1146,7 @@ $$
 
 <br>
 
-### 6.6 PageRank Variants
+### 6.5 PageRank Variants
 
 Standard PageRank is a measure of **global importance**. With evenly splitted nodes, the surfer randomly teleports to a any node in the graph. But what if the importance is relative to specific context? 
 
@@ -1194,7 +1194,7 @@ As the teleport set $S$ shrinks from all nodes $\rightarrow$ a subset $\rightarr
 
 <br>
 
-### 6.7 Matrix Factorisation
+### 6.6 Matrix Factorisation
 
 Random Walk based embeddings $\equiv$ Matrix Factorisation
 
@@ -1240,7 +1240,7 @@ $$
 
 <br>
 
-### 6.8 Limitations
+### 6.7 Limitations
 
 1. **No embedding for unseen nodes**
     If the graph is updated with new nodes, embeddings for new nodes would not automatically appear. Need to recompute the whole updated graph.
@@ -1250,3 +1250,116 @@ $$
 
 3. **Cannot utilise node, edge, or graph features**
     The methods only use the graph structure (adjacency matrix). They completely ignore any potential node features (e.g. user profile information), edge features (e.g. relationship types among nodes), or the graph itself (e.g. metadata).
+
+<br>
+<br>
+<br>
+
+## 7. Semi-supervised Node Classification
+
+<br>
+
+### 7.1 Problem Definition
+
+Given a graph where only some nodes are labelled, we want to predict labels to remaining unlabelled nodes.
+
+> This is a semi-supervised learning as the model leverages both labelled and unlabelled nodes simultaneously during the training phase.
+{: .prompt-tip }
+
+**Network Correlation** is the key insight, where individual behaviours are correlated in the network.
+
+> **Correlation** means nearby nodes belong to the same group/category.
+{: .prompt-tip }
+
+Specifically, Correlation involve two concepts - **Homophily** and **Influence**
+
+- Homophily: **similar** nodes tend to connect.
+
+- Influence: connected nodes affect each other over time.
+
+> $$
+> \text{individual characteristic} \xrightleftharpoons[\text{Influence}]{\text{Homophily}} \text{social connections}
+> $$
+> {: .prompt-info }
+
+Under the Markov Assumption, the label $Y_v$ of node $v$ depends on labels of it's first-degree neighbours $N_v$:
+
+$$
+P(Y_v) = P(Y_v \mid N_v)
+$$
+
+All above motivate the *"guilt-by-association"* principle. If most of $v$'s neighbours carry label $L$, then $v$ is likely labelled as $L$ as well.
+
+<br>
+
+### 7.2 Collective Classification
+
+Collective Classification assign labels to all unlabelled nodes simultaneously, **iteratively** refining predictions using network structure.
+
+Three steps of the framework:
+1. **Local Classifier**: Assign initial labels based on node features alone. No network information used.
+2. **Relational Classifier**: Predict a node $v$'s label from labels and/or features of $v$'s neighbours. Network information entered.
+3. **Collective Inference**: Iteratively apply the Relational Classifier across the graph, propogating label information beyond immediate neighbours, until predictions *stabilise (converged)* or reaching preset *maximum* iteration numbers.
+
+
+### Prbabilistic Relational Classifier
+
+The class probability of node $v$ is the weighted average of class probabilities of its neighbours.
+
+For a node $v$ with neighbours $N_v$, the probability that $v$ belongs to class $c$ is updated as
+
+<a id="eq-prc"></a>
+$$
+P(Y_v = c) = \frac{1}{\sum_{(v,u) \in E} W(v,u)} \sum_{(v,u) \in E} W(v,u) \cdot P(Y_u = c) \tag{1}\label{eq-prc}
+$$
+
+, where $W(v,u)$ is the edge weight between $v$ and $u$.
+
+> $$P(Y_v = c)$$ is the probability of node $v$ with label $c$.
+>
+> $W(v,u)$ becomes entry of a simple adjacency matrix $$A_{v,u}$$ if the graph is unweighted.
+{: .prompt-tip }
+
+**Architecture:**
+1. **Initialise**: 
+    - Labelled nodes keep their ground-truth labels (fixed throughout).
+    - Unlabelled nodes get uniform proability over all classes (or a prior if available).
+
+2. **Iterate**: Update every unlabelled node in randome order using [Equation 1](#eq-prc).
+
+3. **Repeat** until convergence and stabilised or the iteration budget is exhausted.
+
+> Converge is not always guaranteed!
+>
+> This method replies solely on the graph sructure and initial labels, without any node feature information.
+>
+> Update ordering affects the result, especially on small graphs. Large graphs are less sensitive.
+{: .prompt-tip }
+
+> Iteration Stops When:
+> - Converge: Numerical probability stops making any significant change
+>   In maths, we can say
+>   $$
+>   \forall \epsilon > 0, \exists \delta \in \mathbb{N}, s.t. \vert P_{\delta + 1}(Y_v = c) - P_{\delta}(Y_v = c) \vert < \epsilon
+>   $$
+>
+> - Stabilise: Classification stops flipping back and forth, where the decision is locked in.
+> {: .prompt-info }
+
+### Iterative Classification
+
+Iterative Classification incorporates node features alongside neighbour label inforamtion.
+
+Each node $v$ is described by a vector $$\mathbf{a}_v$$, consisting of 2 parts
+
+$$
+\mathbf{a}_v = [\mathbf{f}_v, \mathbf{z}_v]
+$$
+
+, where 
+- $$\mathbf{f}_v$$ is the node $v$'s own feature vector
+- $$\mathbf{z}_v$$ is a summary vector of labels/features of $v$'s neighbours, computed via aggregation
+
+**Architecture:**
+- Phase 1 [training]
+
