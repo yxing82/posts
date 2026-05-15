@@ -1268,10 +1268,10 @@ Given a graph where only some nodes are labelled, we want to predict labels to r
 
 **Network Correlation** is the key insight, where individual behaviours are correlated in the network.
 
-> **Correlation** means nearby nodes belong to the same group/category.
+> Correlation means nearby nodes belong to the same group/category.
 {: .prompt-tip }
 
-Specifically, Correlation involve two concepts - **Homophily** and **Influence**
+Specifically, Correlation involve two concepts, **Homophily** and **Influence**
 
 - Homophily: **similar** nodes tend to connect.
 
@@ -1310,9 +1310,7 @@ For a node $v$ with neighbours $N_v$, the probability that $v$ belongs to class 
 
 <a id="eq-prc"></a>
 \begin{equation}
-$$
 P(Y_v = c) = \frac{1}{\sum_{(v,u) \in E} W(v,u)} \sum_{(v,u) \in E} W(v,u) \cdot P(Y_u = c) \tag{1}\label{eq-prc}
-$$
 \end{equation}
 
 , where $W(v,u)$ is the edge weight between $v$ and $u$.
@@ -1346,13 +1344,13 @@ $$
 >   $$
 >
 > - Stabilise: Classification stops flipping back and forth, where the decision is locked in.
-> {: .prompt-info }
+{: .prompt-info }
 
 ### Iterative Classification
 
 Iterative Classification incorporates node features alongside neighbour label inforamtion.
 
-Each node $v$ is described by a vector $$\mathbf{a}_v$$, consisting of 2 parts
+Each node $v$ is described by a vector $$\mathbf{a}_v$$, consisting of two parts
 
 $$
 \mathbf{a}_v = [\mathbf{f}_v, \mathbf{z}_v]
@@ -1374,19 +1372,21 @@ $$
 - $$\mathbf{I}_v$$ is summary vector of incoming neighbour label information (nodes that point to $v$)
 
     $$
-    I_v \in \mathbb{R}^{k} where I_v[c] = \text{number/proportion of incoming neighbours with label c}
+    I_v \in \mathbb{R}^{k} \quad \text{where} \quad I_v[c] = \quad \text{number(or proportion) of incoming neighbours with label c}
     $$
 
 - $$\mathbf{O}_v$$ is summary vector of outgoing neighbour label information (nodes that point from $v$)
     $$
-    O_v \in \mathbb{R}^{k} where O_v[c] = \text{number/proportion of outgoing neighbours with label c}
+    O_v \in \mathbb{R}^{k} \text{where} \quad O_v[c] = \quad \text{number(or proportion) of outgoing neighbours with label c}
     $$
 
 **Phase 1 (Local Training)**
 1. Train both classifiers on labelled training set
 
-- $$\phi_1$$: Base classifier using node features only - How to map a node $v$'s individual features $$\mathbf{f}_v$$ to the correct label $$Y_v$$.
-- $$\phi_2$$: Relational classifier using node feature and neighbour label summary - How to map both node $v$'s features $$\mathbf{f}_v$$ and its neighbours' labels $$\mathbf{N}_v$$ to the correct label $$Y_v$$.
+- **$$\phi_1$$**: **Base classifier** using node features only
+    How to map a node $v$'s individual features $$\mathbf{f}_v$$ to the correct label $$Y_v$$.
+- **$$\phi_2$$**: **Relational classifier** using node feature and neighbour label summary
+    How to map both node $v$'s features $$\mathbf{f}_v$$ and its neighbours' labels $$\mathbf{N}_v$$ to the correct label $$Y_v$$.
    
 > unlabelled nodes play zero role in the training.
 >
@@ -1460,7 +1460,7 @@ $$
 | Advantage | Limitation |
 |---|---|
 | Easy to code up | Convergence is not guaranteed |
-| Can apply to any graphical model with any form of potentials, including high-order | For graphs with cycles, messages will be in a loop <br> Loopy BP is then an approximation, not exact inference |
+| Can apply to any graphical model with any form of potentials <br> including high-order | For graphs with cycles, messages will be in a loop <br> Loopy BP is then an approximation, not exact inference |
 
 ### Summary and Comparison
 
