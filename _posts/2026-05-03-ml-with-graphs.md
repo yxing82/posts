@@ -1277,10 +1277,8 @@ Specifically, Correlation involve two concepts, **Homophily** and **Influence**
 
 - Influence: connected nodes affect each other over time.
 
-> $$
-> \text{individual characteristic} \xrightleftharpoons[\text{Influence}]{\text{Homophily}} \text{social connections}
-> $$
-> {: .prompt-info }
+> $$\text{individual characteristic} \xrightleftharpoons[\text{Influence}]{\text{Homophily}} \text{social connections}$$
+{: .prompt-info }
 
 Under the Markov Assumption, the label $Y_v$ of node $v$ depends on labels of it's first-degree neighbours $N_v$:
 
