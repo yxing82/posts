@@ -2,7 +2,7 @@
 title: "Summary: OASIS – Optimisation-based Activity Scheduling with Integrated Simultaneous Choice Dimensions"
 date: 2026-05-26
 description: "Reading notes on Pougala et al. (2023) — an integrated framework for simultaneous activity-based modelling using Metropolis-Hastings sampling and maximum likelihood estimation."
-categories: [Summary, Transport Modelling]
+categories: [Literature Notes, Transport Modelling]
 tags: [activity-based modelling, discrete choice, MCMC, parameter estimation, literature review]
 math: true
 ---
