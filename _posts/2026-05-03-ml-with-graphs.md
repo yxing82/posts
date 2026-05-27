@@ -2,7 +2,7 @@
 title: "Learning Notes on Machine Learning with Graphs (Updating)"
 date: 2026-05-03
 categories: [Notes, Machine Learning]
-tags: [graphs, ml, random walk, node embedding, graph embedding, pagerank, node classification]
+tags: [graphs, ml, random walk, node embedding, graph embedding, pagerank, node classification, deep learning]
 math: true
 ---
 
@@ -10,7 +10,7 @@ math: true
 
 > **Instructor:** Prof. Jure Leskovec
 
-> **Lectures Covered:** 1.1 – 5.3
+> **Lectures Covered:** 1.1 – 6.2
 
 <br>
 
@@ -1067,7 +1067,7 @@ Repeatedly multiplying by $M$ amplifies the component along the principal aigenv
 
 A **spider trap** is a set of pages whose out-links all stay within the group. 
 
-The random surfer gets trapped, amd all importance acculates *inside* the trap.
+The random surfer gets trapped, amd all importance acculates *inside* the trap -- **Self-Loop**.
 
 > **Example:**
 > 
@@ -1430,7 +1430,7 @@ Belief Propagation (BP) is a **dynamic programming approach** where nodes **pass
  
 | Symbol | Meaning |
 |---|---|
-| $$\psi(Y_i, Y_j)$$ | **Label-label potential matrix.** <br> $$\psi(Y_i, Y_j) = P(Y_j = b \mid Y_i = a)$$ <br> Probability that neighbor $j$ is in state $b$ given $i$ is in state $a$. Encodes the correlation between neighbors. |
+| $$\psi(Y_i, Y_j)$$ | **Label-label potential matrix.** <br> $$\psi(Y_i, Y_j) = P(Y_j = b \mid Y_i = a)$$ <br> Probability that neighbour $j$ is in state $b$ given $i$ is in state $a$. Encodes the correlation between neighbours. |
 | $$\phi(Y_i)$$ | **Prior belief** (node feature prior). <br> Probability of node $i$ being in state $$Y_i$$. |
 | $$m_{i \to j}(Y_j)$$ | **Message** from $i$ to $j$ <br> node $i$'s estimate of the probability that $j$ is in state $$Y_j$$. |
 | $$\mathcal{L}$$ | The set of all possible labels. |
@@ -1470,6 +1470,133 @@ $$
 
 | Method | Uses Node Features? | Uses Network Structure? | Convergence Guaranteed? |
 |---|---|---|---|
-| Probabilistic Relational Classifier | No | Yes <br> (neighbor labels) | No |
-| Iterative Classification | Yes | Yes <br> (neighbor labels + features) | No |
+| Probabilistic Relational Classifier | No | Yes <br> (neighbour labels) | No |
+| Iterative Classification | Yes | Yes <br> (neighbour labels + features) | No |
 | Belief Propagation | Yes (as priors) | Yes <br> (message passing) | No <br> (approximate on loopy graphs) |
+
+<br>
+<br>
+<br>
+
+## 8. Graph Neural Network
+
+<br>
+
+### 8.1 Deep Graph Encoder
+
+The goal of GNN is to learn a deep graph encoder.
+
+The **Deep Graph Encoder** is a function that maps each node $v$ to an embedding vector $$z_v$$ by applying multiple layers of non-linear transformations that respect the graph structure:
+
+$$
+\text{ENC}(v) = \text{multiple layers of non-linear transformation based on graph structure}
+$$
+
+> Deep graph encoder generalises from shallow encoders, where embeddings are simply lookup tables.
+{: .prompt-tip }
+
+A deep graph encoder computes embeddings from a node's local neighbourhood, making it far more powerful and generalisable.
+
+### Standard Deep Learning
+
+Modern deep learning is designed for simple sequences and grids.
+
+> Sequences: text, audio $\rightarrow$ RNNs, Transformers
+> Grids: images $\rightarrow$ CNNs
+{: .prompt-info }
+
+Graphs, however, have more complex properties:
+
+- **Arbitrary size and complex topology**: no fixed grid structure.
+- **No fixed node ordering** - there's no canonical way to index nodes.
+- **Dynamic and multimodal** - graphs may change over time and have heterogeneous features.
+
+
+<br>
+
+### 8.2 Foundations of Deep Learning
+
+### Loss Functions and Cross-Entropy
+
+A supervised learning pipeline has 4 parts:
+1. Input data $\mathbf{x}$.
+2. Labels $\mathbf{y}$.
+3. A parametric model $$f_\theta(\mathbf{x})$$, producing prediction $\hat{y}$.
+4. A **loss function** $\mathcal{L}(y, \hat{y})$ measuring how wrong the predictions are.
+
+Cross-entropy is the standard loss for **classification** because it penalises confident wrong predictions much more heavily than MSE, producing stronger gradient signals for learning.
+
+The choice of loss function is entirely dependent on the specific task (classification or regression) and the nature of the data.
+
+### Gradient Descent
+
+**Gradient** $$\nabla_\theta \mathcal{L}$$ is a vector of partial derivatives pointing in the direction of steepest increase of the loss.
+
+> The concept of "increase" is inherently from its mathematical definition. 
+> Specifically, gradient is the directioanl derivative in the direction of largest increase.
+{: .prompt-tip }
+
+To reduce the loss, we step in the opposite direction:
+
+$$
+\theta \leftarrow \theta - \eta \, \nabla_\theta \mathcal{L}
+$$
+
+, where $\eta$ is the learning rate controlling step size. This is **Gradient Descent**, which is the fundamental optimisation loop underlying all deep learning.
+
+
+### Stochastic Gradient Descent (SGD)
+
+The standard gradient descent requires computing the gradient over the entire dataset at every step, which is very expensive. 
+
+*What if at each step, pick a different minibatch $\mathcal{B}$ (subset of the entire dataset) as the input $\mathbf{x}$?*
+
+**Stochastic Gradient Descent** approximates the full gradient by computing it on a random **minibatch**:
+
+$$
+\theta \leftarrow \theta - \eta \, \nabla_\theta \mathcal{L_\text{minibatch}}
+$$
+
+> The noise introduced by minibatch actually helps escape shallow local minima.
+{: .prompt-tip }
+
+Here are several very important concepts:
+
+- Batch size: the number of data points in a minibatch
+
+- Iteration: one step of SGD on one minibatch to update the model
+
+> the number of iteration  = $\frac{data size}{batch size}$
+{: .prompt-tip }
+
+- Epoch: one full pass over the dataset, where the model has seen every data point exactly once
+
+**SGD Loop Algorithm:**
+1. **Setup**: Shuffle the entire training dataset and split it into minibatches
+
+2. **Epoch Loop**: Begin an epoch to run through every minibatch exactly once
+
+3. **Batch Loop** (one iteration): For each individual batch, the following sequence happens
+    - **Predict**: The model looks at the data in that specific batch and make its predictions
+    - **Calculate loss**: The loss function calculates exactly how wrong those specific predictions are, compared to the actual truth
+    - **Find the gradient**: The model uses partial derivatives to determine which way to make less loss
+    - **Update parameters**: The model adjusts its parameters (weights and biases) slightly in the right direction
+
+4. Once this update is made from this iteration, the model throws away this minibatch, grabs the next minibatch, and repeats Step 3.
+
+
+Given the design of truly uniform and unskewed randomness, SGD is an unbiased estimator of full gradient. More advanced optimisers are:
+- SGD with Momentum: accumulates a running average of past gradients so updates carry inertia, smoothing out noisy oscillations
+- ADAM: adapts the learning rate per-parameter using estimates of both the 1st moment (Mean) and the 2nd moment (Variance) of the gradients.
+
+> ADAM is the most commonly used optimiser in practice
+{: .prompt-tip }
+
+
+### Backpropagration
+
+
+
+
+
+
