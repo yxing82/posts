@@ -1502,14 +1502,15 @@ A deep graph encoder computes embeddings from a node's local neighbourhood, maki
 Modern deep learning is designed for simple sequences and grids.
 
 > Sequences: text, audio $\rightarrow$ RNNs, Transformers
+>
 > Grids: images $\rightarrow$ CNNs
 {: .prompt-info }
 
 Graphs, however, have more complex properties:
 
 - **Arbitrary size and complex topology**: no fixed grid structure.
-- **No fixed node ordering** - there's no canonical way to index nodes.
-- **Dynamic and multimodal** - graphs may change over time and have heterogeneous features.
+- **No fixed node ordering**: there's no canonical way to index nodes.
+- **Dynamic and multimodal**: graphs may change over time and have heterogeneous features.
 
 
 <br>
@@ -1530,7 +1531,7 @@ The choice of loss function is entirely dependent on the specific task (classifi
 
 ### Gradient Descent
 
-**Gradient** $$\nabla_\theta \mathcal{L}$$ is a vector of partial derivatives pointing in the direction of steepest increase of the loss.
+**Gradient** $$\nabla_\theta \mathcal{L}$$ is a vector of **partial derivatives** pointing in the direction of steepest increase of the loss.
 
 > The concept of "increase" is inherently from its mathematical definition. 
 > Specifically, gradient is the directioanl derivative in the direction of largest increase.
@@ -1566,10 +1567,12 @@ Here are several very important concepts:
 
 - Iteration: one step of SGD on one minibatch to update the model
 
+- Epoch: one full pass over the dataset, where the model has seen every data point exactly once
+
 > the number of iteration  = $\frac{data size}{batch size}$
 {: .prompt-tip }
 
-- Epoch: one full pass over the dataset, where the model has seen every data point exactly once
+
 
 **SGD Loop Algorithm:**
 1. **Setup**: Shuffle the entire training dataset and split it into minibatches
@@ -1586,17 +1589,184 @@ Here are several very important concepts:
 
 
 Given the design of truly uniform and unskewed randomness, SGD is an unbiased estimator of full gradient. More advanced optimisers are:
-- SGD with Momentum: accumulates a running average of past gradients so updates carry inertia, smoothing out noisy oscillations
-- ADAM: adapts the learning rate per-parameter using estimates of both the 1st moment (Mean) and the 2nd moment (Variance) of the gradients.
+- **SGD with Momentum**: accumulates a running average of past gradients so updates carry inertia, smoothing out noisy oscillations
+- **ADAM**: adapts the learning rate per-parameter using estimates of both the 1st moment (Mean) and the 2nd moment (Variance) of the gradients.
 
 > ADAM is the most commonly used optimiser in practice
 {: .prompt-tip }
 
 
-### Backpropagration
+<br>
+
+### Neural Network Function
+
+The fundamental building block of any neural network is the **layer**.
+
+Simply, a neural network is an information processing pipeline, and a layer is a single station within that pipeline. Its purpose is to receive an incoming signal (data), transform it into a more useful representation, and pass it forward.
+
+To achieve this, every standard hidden layer in a neural network operates as a distinct, **two-step** mathematical engine:
+
+**STEP 1: Linear Transformation (Between layers)**
+
+The network takes the output from the previous layer ($x$), multiplies it by a matrix of weights ($W$), and adds a vector of biases ($b$).
+
+$$
+z = Wx + b
+$$
+
+This equation is purely linear. It only scales and shifts the data.
+
+**STEP 2: Non-Linear Activation (Inside the node)**
+
+Before passing the result $z$ onto the next layer, the network feeds it through an activation function $f$.
+
+$$
+a = f(z)
+$$
+
+The activation function takes the straight line; blends, clips, or squashes it, introducing the non-linearity required to learn complex patterns.
+
+> Common non-linear activation function:
+>
+> - Rectified Linear Unit (**ReLU**): $f(x) = max(x, 0)$
+>
+> - **Sigmoid**: $$f(x) = \frac{1}{1 + e^{-x}}$$
+>
+> - **Tanh**: $$f(x) = \frac{e^{x} - e^{-x}}{e^{x} + e^{-x}}$$
+{: .prompt-info }
 
 
+> ***Why we don't just use complex, non-linear maths for connections themselves?***
+> 
+> Because of **speed** and **hardware**.
+>
+> Linear functions are increadibly simple for modern GPUs to calculate, especially matric multiplication.
+>
+> By keeping the connections between layers strictly linear, neural networks can process massive amounts of data lightning-fast, and reply entirely on simple activation functions places at the end of the calculation to provide all the complex bending and shaping the networks needs.
+{: .prompt-info }
 
 
+### Multi-Layer Perceptron (MLP)
+
+A single neuron computes a weighted sum of inputs, adds a bias, and passes the result through a **non-linear activation function** $\sigma$:
+
+$$
+\hat{y} = \sigma (\mathbf{w}^{T} \mathbf{x} + b)
+$$
+
+Through stacking neurons into multiple layers, the model create a **Multi-Layer Perceptron**.
+
+> For a two-layer network,
+> 
+> $$
+> \mathbf{h} = \sigma (\mathbf{W}_1 \mathbf{x} + b_1) \quad \hat{y} = \mathbf{W}_2 \mathbf{h} + \mathbf{b}_2
+> $$
+{: .prompt-example }
+
+The hidden layer ($\mathbf{h}$ in the above example) learns an intermediate representation. MLP therefore can approximate arbitrarily complex function, but treat each input independently.
+
+> MLP has no mechanism to exploit relational structure, where we need to introduce GNN to solve the problem.
+{: .prompt-tip }
+
+> Underlying Maths - **Universal Approximation Theorem**
+> A feedforward neural network with just a single hidden layer can approximate any continuous mathematical function to any desired level of accuracy, provided that the network has a sufficient number of neurons and uses an appropriate non-linear activation function.
+{: .prompt-info }
 
 
+### Backpropagation
+
+For the two-layer network above, the gradient of loss w.r.t. $$\mathbf{W}_2$$:
+
+$$
+\frac{\partial \mathcal{L}}{\partial \mathbf{W}_2} = \frac{\partial \mathcal{L}}{\partial \hat{y}} \cdot \frac{\partial \mathcal{l}}{\partial \mathbf{W}_2}
+$$
+
+, w.r.t $$\mathbf{W}_1$$ involves every intermediate variable between $$\mathbf{W}_1$$ and the final loss:
+
+$$
+\frac{\partial \mathcal{L}}{\partial \mathbf{W}_1} = \frac{\partial \mathcal{L}}{\partial \hat{y}} \cdot \frac{\partial \hat{y}}{\partial \mathbf{h}} \cdot \frac{\partial \mathbf{h}}{\partial \mathbf{W}_1}
+$$
+
+
+Backpropagration is simply the chain rule applied systematically, layer by layer, from the loss back to the earliest parameters. Each factor in the chain is a local derivative computed from quantities already available at that layer.
+
+Each of these factors is an entriy of a **Jacobian matrix** (e.g. $$\frac{\partial \hat{y}}{\partial \mathbf{h}}$$). Understanding the Jacobian matrix is therefore central to understanding how gradient flow through a network.
+
+### The Jacobian Matrix: Maths Definition
+
+In multivariable analysis, if a function $$\mathbf{f}: \mathbb{R}^n \rightarrow \mathbb{R}^n$$ maps input $x$ with $n$ components to output $y$ with $m$ component, the Jacobian $J$ is the $m \times n$ matrix:
+
+$$
+J_{i,j} = \frac{\partial y_i}{\partial x_j}
+$$
+
+Each entry $(i, j)$ answers: "If I perturb the $j$-th input by a tiny amount, how much does the $i$-th output change?"
+
+The Jacobian is the best linear approximation of $\mathbf{f}$ at a point.
+
+> $$
+> \text{dim(derivative)} = \text{dim(output)} + \text{dim(input)}
+> $$
+{: .prompt-tip }
+
+
+### The Jacobian in Neural Network Layer
+
+For a linear layer $\mathbf{y} = \mathbf{W} \mathbf{x} + \mathbf{b}$, the Jacobian of $\mathbf{y}$ w.r.t. $\mathbf{x}$ is simply the weight matrix:
+
+$$
+\frac{\partial {\mathbf{y}}}{\partial {\mathbf{x}}} = \mathbf{W}
+$$
+
+, which aligns perfectly with the textbook definition: vector in, vector out, 2D Jacobian.
+
+
+### 3D Tensor Problem
+
+During training, we need $$\frac{\partial y_1}{\partial {\mathbf{W}}}$$.
+
+If given $y$ is a 1D vector and $\mathbf{W}$ is a 2D matrix, then by the **dimension rule in mathematics**, the derivative vector should srticly be a **rank-3 vector**.
+
+For a concrete $2 \times 2$ example, where 
+
+$$
+\begin{aligned}
+y_1 &= w_{11} x_1 + w_{12} x_2 \\
+y_2 &= w_{21} x_1 + w_{22} x_2
+\end{aligned}
+$$
+
+, we have 
+
+$$
+\begin{aligned}
+\frac{\partial y_1}{\partial \mathbf{W}} = \begin{bmatrix} x_1 & x_2 \\ 0 & 0 \end{bmatrix} \\
+\frac{\partial y_2}{\partial \mathbf{W}} = \begin{bmatrix} 0 & 0 \\ x_1 & x_2 \end{bmatrix}
+\end{aligned}
+$$
+
+Stacking these two $2 \times 2$ slices produces a $2 \times 2 \times 2$ cube.
+
+
+### The Flatten Trick
+
+Deep learning frameworks sidestep 3D tensors by **flattening** W into a 1D vector. For a $2 \times 2$ weigh matrix:
+
+$$
+\mathbf{w}_{\text{flat}} = [w_{11},\; w_{12},\; w_{21},\; w_{22}]
+$$
+
+Now both $y$ and $$\mathbf{w}_{\text{flat}}$$ are 1D vectors, so the derivative becomes a standard $2 \times 4$ Jacobian:
+
+$$
+J = \begin{bmatrix} x_1 & x_2 & 0 & 0 \\ 0 & 0 & x_1 & x_2 \end{bmatrix}
+$$
+
+This is purely a computational convenience, because GPUs are optimised for 2D matrix operations.
+
+> In pure maths, flattening destroys geometric meaning.
+>
+> A $2 \times 2$ matrix represents a specific linear transformation, such as rotation, scalling, and shearing.
+>
+> Smashing a $2 \times 2$ matrix into a length-4 list strips away those geometric structures.
+{: .prompt-tip }
