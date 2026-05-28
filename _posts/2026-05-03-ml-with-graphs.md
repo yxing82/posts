@@ -1534,6 +1534,7 @@ The choice of loss function is entirely dependent on the specific task (classifi
 **Gradient** $$\nabla_\theta \mathcal{L}$$ is a vector of **partial derivatives** pointing in the direction of steepest increase of the loss.
 
 > The concept of "increase" is inherently from its mathematical definition. 
+>
 > Specifically, gradient is the directioanl derivative in the direction of largest increase.
 {: .prompt-tip }
 
@@ -1563,11 +1564,11 @@ $$
 
 Here are several very important concepts:
 
-- Batch size: the number of data points in a minibatch
+- **Batch size**: the number of data points in a minibatch
 
-- Iteration: one step of SGD on one minibatch to update the model
+- **Iteration**: one step of SGD on one minibatch to update the model
 
-- Epoch: one full pass over the dataset, where the model has seen every data point exactly once
+- **Epoch**: one full pass over the dataset, where the model has seen every data point exactly once
 
 > the number of iteration  = $\frac{data size}{batch size}$
 {: .prompt-tip }
@@ -1575,15 +1576,15 @@ Here are several very important concepts:
 
 
 **SGD Loop Algorithm:**
-1. **Setup**: Shuffle the entire training dataset and split it into minibatches
+1. Setup: Shuffle the entire training dataset and split it into minibatches
 
-2. **Epoch Loop**: Begin an epoch to run through every minibatch exactly once
+2. Epoch Loop: Begin an epoch to run through every minibatch exactly once
 
-3. **Batch Loop** (one iteration): For each individual batch, the following sequence happens
-    - **Predict**: The model looks at the data in that specific batch and make its predictions
-    - **Calculate loss**: The loss function calculates exactly how wrong those specific predictions are, compared to the actual truth
-    - **Find the gradient**: The model uses partial derivatives to determine which way to make less loss
-    - **Update parameters**: The model adjusts its parameters (weights and biases) slightly in the right direction
+3. Batch Loop (one iteration): For each individual batch, the following sequence happens
+    - Predict: The model looks at the data in that specific batch and make its predictions
+    - Calculate loss: The loss function calculates exactly how wrong those specific predictions are, compared to the actual truth
+    - Find the gradient: The model uses partial derivatives to determine which way to make less loss
+    - Update parameters: The model adjusts its parameters (weights and biases) slightly in the right direction
 
 4. Once this update is made from this iteration, the model throws away this minibatch, grabs the next minibatch, and repeats Step 3.
 
@@ -1608,20 +1609,20 @@ To achieve this, every standard hidden layer in a neural network operates as a d
 
 **STEP 1: Linear Transformation (Between layers)**
 
-The network takes the output from the previous layer ($x$), multiplies it by a matrix of weights ($W$), and adds a vector of biases ($b$).
+The network takes the output from the previous layer ($\mathbf{x}$), multiplies it by a matrix of weights ($\mathbf{W}$), and adds a vector of biases ($b$).
 
 $$
-z = Wx + b
+\mathbf{z} = \mathbf{W} \mathbf{x} + \mathbf{b}
 $$
 
 This equation is purely linear. It only scales and shifts the data.
 
 **STEP 2: Non-Linear Activation (Inside the node)**
 
-Before passing the result $z$ onto the next layer, the network feeds it through an activation function $f$.
+Before passing the result $\mathbf{z}$ onto the next layer, the network feeds it through an activation function $f$.
 
 $$
-a = f(z)
+\mathbf{a} = f(\mathbf{x})
 $$
 
 The activation function takes the straight line; blends, clips, or squashes it, introducing the non-linearity required to learn complex patterns.
@@ -1669,6 +1670,7 @@ The hidden layer ($\mathbf{h}$ in the above example) learns an intermediate repr
 {: .prompt-tip }
 
 > Underlying Maths - **Universal Approximation Theorem**
+>
 > A feedforward neural network with just a single hidden layer can approximate any continuous mathematical function to any desired level of accuracy, provided that the network has a sufficient number of neurons and uses an appropriate non-linear activation function.
 {: .prompt-info }
 
@@ -1704,10 +1706,19 @@ Each entry $(i, j)$ answers: "If I perturb the $j$-th input by a tiny amount, ho
 
 The Jacobian is the best linear approximation of $\mathbf{f}$ at a point.
 
+> Rank-Nullity for the Jacobian:
+>
+> By the Rank-Nullity theorem, the input dimension of the network is conserved by the linear transformation of the Jacobian matrix $J$, s.t.
+>
 > $$
-> \text{dim(derivative)} = \text{dim(output)} + \text{dim(input)}
+> \dim(\mathbb{R}^{n}) = \dim(\ker(J)) + \operatorname{rank}(J)
 > $$
-{: .prompt-tip }
+>
+> Translation for Deep Learning
+> - $$\dim(\mathbb{R}^{n})$$: The total number of input features 
+> - $$\dim(\ker(J))$$: The nullity. This represents the directions in the input space that cause absolutely no change in the output, where no information lost ot ignored by the network.
+> - $$\operatorname{rank}(J)$$: The rank. This represents the actual number of independent, meaningful directions the input can be transformed into within the output space, where information preserved.
+{: .prompt-info }
 
 
 ### The Jacobian in Neural Network Layer
@@ -1725,7 +1736,7 @@ $$
 
 During training, we need $$\frac{\partial y_1}{\partial {\mathbf{W}}}$$.
 
-If given $y$ is a 1D vector and $\mathbf{W}$ is a 2D matrix, then by the **dimension rule in mathematics**, the derivative vector should srticly be a **rank-3 vector**.
+If given $y$ is a 1D vector and $\mathbf{W}$ is a 2D matrix, then by the **Rank-Nullity Theorem**, the derivative vector should srticly be a **rank-3 vector**.
 
 For a concrete $2 \times 2$ example, where 
 
